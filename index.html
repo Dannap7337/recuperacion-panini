@@ -19,13 +19,6 @@
     </div>
 
     <script>
-        // Usamos una función para limpiar cualquier carácter extraño
-        const cleanURL = 'https://pvcpnuoztvsxtukgmfyq.supabase.co'.replace(/\s/g, '');
-        const cleanKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0'.replace(/\s/g, '');
-
-        // Inicializamos fuera para que esté lista
-        const supabaseClient = window.supabase.createClient(cleanURL, cleanKEY);
-
         document.getElementById('btn').onclick = async function(e) {
             e.preventDefault();
             
@@ -46,19 +39,24 @@
             this.innerText = "Procesando...";
 
             try {
-                // Intentamos actualizar
-                const { data, error } = await supabaseClient.auth.updateUser({ password: pass1 });
+                // AQUÍ ESTÁ EL CAMBIO: URL y KEY puestas "a mano" sin variables intermedias
+                const _supabase = window.supabase.createClient(
+                    'https://pvcpnuoztvsxtukgmfyq.supabase.co', 
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0'
+                );
+
+                const { data, error } = await _supabase.auth.updateUser({ password: pass1 });
 
                 if (error) {
-                    // Si el link ya expiró, saldrá este mensaje
-                    alert("Aviso de Supabase: " + error.message);
+                    // Si sale "Auth session missing", es que el link del correo expiró
+                    alert("Aviso: " + error.message);
                     this.disabled = false;
                     this.innerText = "Guardar Cambios";
                 } else {
                     alert("✅ ¡ÉXITO! Contraseña actualizada.");
-                    document.getElementById('status').innerText = "¡Contraseña cambiada! Regresa a la App.";
+                    document.getElementById('status').innerText = "¡Listo! Ya puedes volver a la App.";
                     this.style.backgroundColor = "#28a745";
-                    this.innerText = "¡LISTO!";
+                    this.innerText = "¡CAMBIADA!";
                 }
             } catch (err) {
                 alert("Error de conexión: " + err.message);
