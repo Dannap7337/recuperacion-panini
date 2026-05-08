@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar Contraseña</title>
+    <!-- Cargamos la librería -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
@@ -29,14 +30,13 @@
     const SUPABASE_URL = 'https://pvcpnuoztvsxtukgmfyq.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0'; 
 
-    // Inicializar Supabase
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // --- CORRECCIÓN AQUÍ ---
+    // En la v2 se accede a través de supabase.createClient directamente
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Elementos
     const btn = document.getElementById('btn-update');
     const msgDiv = document.getElementById('message');
 
-    // Función para mostrar mensajes en pantalla
     function mostrar(texto, color) {
         msgDiv.style.display = 'block';
         msgDiv.textContent = texto;
@@ -44,25 +44,23 @@
         msgDiv.style.color = color === 'rojo' ? '#d73a49' : '#22863a';
     }
 
-    // Escuchar el clic del botón
     btn.addEventListener('click', async () => {
         const p1 = document.getElementById('new_password').value;
         const p2 = document.getElementById('confirm_password').value;
 
-        // Validaciones básicas
         if (!p1 || !p2) return alert("Por favor llena ambos campos");
         if (p1 !== p2) return alert("Las contraseñas no coinciden");
-        if (p1.length < 6) return alert("La contraseña es muy corta (mínimo 6)");
+        if (p1.length < 6) return alert("Mínimo 6 caracteres");
 
         btn.disabled = true;
         btn.textContent = "Cambiando...";
 
         try {
-            // Intentar actualizar
-            const { data, error } = await supabase.auth.updateUser({ password: p1 });
+            // Actualizar contraseña
+            const { error } = await supabase.auth.updateUser({ password: p1 });
 
             if (error) {
-                alert("Error de Supabase: " + error.message);
+                alert("Error: " + error.message);
                 mostrar("Error: " + error.message, 'rojo');
                 btn.disabled = false;
                 btn.textContent = "Guardar Contraseña";
