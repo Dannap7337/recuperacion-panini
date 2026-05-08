@@ -1,47 +1,71 @@
-<script>
-    // 1. Datos de conexión (Limpiamos espacios con .trim() por si acaso)
-    const URL = 'https://pvcpnuoztvsxtukgmfyq.supabase.co'.trim();
-    const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0'.trim();
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recuperar Contraseña</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f4f4f9;">
 
-    document.getElementById('btn').onclick = async function(e) {
-        e.preventDefault();
+    <div style="background: white; display: inline-block; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h2>🔑 Nueva Contraseña</h2>
+        <input type="password" id="p1" placeholder="Nueva contraseña" style="display:block; margin: 10px auto; padding: 10px; width: 200px;"><br>
+        <input type="password" id="p2" placeholder="Confirmar contraseña" style="display:block; margin: 10px auto; padding: 10px; width: 200px;"><br>
         
-        const pass1 = document.getElementById('p1').value;
-        const pass2 = document.getElementById('p2').value;
+        <button id="btn" style="padding: 10px 20px; background: #14A8FD; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+            Guardar Cambios
+        </button>
+        <p id="status" style="margin-top: 20px; color: #666; font-size: 12px;"></p>
+    </div>
 
-        if (!pass1 || !pass2) {
-            alert("⚠️ ATENCIÓN: Los campos están vacíos.");
-            return;
-        }
+    <script>
+        // Usamos una función para limpiar cualquier carácter extraño
+        const cleanURL = 'https://pvcpnuoztvsxtukgmfyq.supabase.co'.replace(/\s/g, '');
+        const cleanKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0'.replace(/\s/g, '');
 
-        if (pass1 !== pass2) {
-            alert("❌ Las contraseñas no coinciden.");
-            return;
-        }
+        // Inicializamos fuera para que esté lista
+        const supabaseClient = window.supabase.createClient(cleanURL, cleanKEY);
 
-        this.disabled = true;
-        this.innerText = "Cambiando...";
-
-        try {
-            // 2. Inicialización GARANTIZADA
-            // Usamos la variable directamente para que no haya fallos de lectura
-            const supabaseClient = window.supabase.createClient(URL, KEY);
+        document.getElementById('btn').onclick = async function(e) {
+            e.preventDefault();
             
-            const { error } = await supabaseClient.auth.updateUser({ password: pass1 });
+            const pass1 = document.getElementById('p1').value;
+            const pass2 = document.getElementById('p2').value;
 
-            if (error) {
-                alert("Error de Supabase: " + error.message);
+            if (!pass1 || !pass2) {
+                alert("⚠️ Los campos están vacíos.");
+                return;
+            }
+
+            if (pass1 !== pass2) {
+                alert("❌ Las contraseñas no coinciden.");
+                return;
+            }
+
+            this.disabled = true;
+            this.innerText = "Procesando...";
+
+            try {
+                // Intentamos actualizar
+                const { data, error } = await supabaseClient.auth.updateUser({ password: pass1 });
+
+                if (error) {
+                    // Si el link ya expiró, saldrá este mensaje
+                    alert("Aviso de Supabase: " + error.message);
+                    this.disabled = false;
+                    this.innerText = "Guardar Cambios";
+                } else {
+                    alert("✅ ¡ÉXITO! Contraseña actualizada.");
+                    document.getElementById('status').innerText = "¡Contraseña cambiada! Regresa a la App.";
+                    this.style.backgroundColor = "#28a745";
+                    this.innerText = "¡LISTO!";
+                }
+            } catch (err) {
+                alert("Error de conexión: " + err.message);
                 this.disabled = false;
                 this.innerText = "Guardar Cambios";
-            } else {
-                alert("✅ ¡ÉXITO! Contraseña actualizada.");
-                document.getElementById('status').innerText = "¡Listo! Ya puedes volver a la App de Streamlit.";
-                this.style.display = 'none';
             }
-        } catch (err) {
-            alert("Error técnico de URL: " + err.message);
-            this.disabled = false;
-            this.innerText = "Guardar Cambios";
-        }
-    };
-</script>
+        };
+    </script>
+</body>
+</html>
