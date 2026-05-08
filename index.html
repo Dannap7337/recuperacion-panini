@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar Contraseña</title>
-    <!-- Cargamos la librería -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         button { background-color: #14A8FD; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
-        button:disabled { background-color: #ccc; }
         #message { margin-top: 15px; padding: 10px; border-radius: 5px; display: none; font-size: 14px; }
     </style>
 </head>
@@ -27,55 +25,51 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://pvcpnuoztvsxtukgmfyq.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0'; 
+    // Usamos un pequeño retraso para asegurar que la librería cargó en el navegador
+    window.onload = function() {
+        const url = 'https://pvcpnuoztvsxtukgmfyq.supabase.co';
+        const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0';
+        
+        // Forma correcta de acceder al cliente en la v2 desde el navegador
+        const _supabase = window.supabase.createClient(url, key);
 
-    // --- CORRECCIÓN AQUÍ ---
-    // En la v2 se accede a través de supabase.createClient directamente
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const btn = document.getElementById('btn-update');
+        const msgDiv = document.getElementById('message');
 
-    const btn = document.getElementById('btn-update');
-    const msgDiv = document.getElementById('message');
+        btn.onclick = async function() {
+            const p1 = document.getElementById('new_password').value;
+            const p2 = document.getElementById('confirm_password').value;
 
-    function mostrar(texto, color) {
-        msgDiv.style.display = 'block';
-        msgDiv.textContent = texto;
-        msgDiv.style.backgroundColor = color === 'rojo' ? '#ffebe9' : '#e6ffed';
-        msgDiv.style.color = color === 'rojo' ? '#d73a49' : '#22863a';
-    }
+            if (!p1 || !p2) { alert("Llena ambos campos"); return; }
+            if (p1 !== p2) { alert("Las contraseñas no coinciden"); return; }
+            if (p1.length < 6) { alert("Mínimo 6 caracteres"); return; }
 
-    btn.addEventListener('click', async () => {
-        const p1 = document.getElementById('new_password').value;
-        const p2 = document.getElementById('confirm_password').value;
+            btn.disabled = true;
+            btn.textContent = "Cambiando...";
 
-        if (!p1 || !p2) return alert("Por favor llena ambos campos");
-        if (p1 !== p2) return alert("Las contraseñas no coinciden");
-        if (p1.length < 6) return alert("Mínimo 6 caracteres");
+            try {
+                const { error } = await _supabase.auth.updateUser({ password: p1 });
 
-        btn.disabled = true;
-        btn.textContent = "Cambiando...";
-
-        try {
-            // Actualizar contraseña
-            const { error } = await supabase.auth.updateUser({ password: p1 });
-
-            if (error) {
-                alert("Error: " + error.message);
-                mostrar("Error: " + error.message, 'rojo');
+                if (error) {
+                    alert("Error: " + error.message);
+                    msgDiv.style.display = 'block';
+                    msgDiv.textContent = error.message;
+                    msgDiv.style.backgroundColor = '#ffebe9';
+                    btn.disabled = false;
+                    btn.textContent = "Guardar Contraseña";
+                } else {
+                    alert("✅ ¡Éxito! Contraseña actualizada.");
+                    msgDiv.style.display = 'block';
+                    msgDiv.textContent = "¡Listo! Ya puedes volver a la App.";
+                    msgDiv.style.backgroundColor = '#e6ffed';
+                    btn.style.display = 'none';
+                }
+            } catch (err) {
+                alert("Error técnico: " + err.message);
                 btn.disabled = false;
-                btn.textContent = "Guardar Contraseña";
-            } else {
-                alert("✅ ¡Éxito! Contraseña actualizada.");
-                mostrar("¡Listo! Ya puedes volver a la App de Streamlit.", 'verde');
-                btn.style.display = 'none';
-                await supabase.auth.signOut();
             }
-        } catch (err) {
-            alert("Error crítico: " + err.message);
-            btn.disabled = false;
-            btn.textContent = "Guardar Contraseña";
-        }
-    });
+        };
+    };
 </script>
 
 </body>
