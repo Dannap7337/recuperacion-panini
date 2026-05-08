@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Contraseña - Panini Hub</title>
+    <!-- Importamos la librería oficial de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #14A8FD;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0f8cd4;
+        }
+        #message {
+            margin-top: 15px;
+            color: red;
+            font-size: 14px;
+        }
+        .success {
+            color: green !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🔑 Restablecer Contraseña</h2>
+    <p>Ingresa tu nueva contraseña para Panini Hub.</p>
+    
+    <input type="password" id="new_password" placeholder="Nueva Contraseña" required>
+    <input type="password" id="confirm_password" placeholder="Confirmar Contraseña" required>
+    
+    <button onclick="updatePassword()">Actualizar Contraseña</button>
+    <div id="message"></div>
+</div>
+
+<script>
+    // --- 1. CONFIGURA TUS CLAVES DE SUPABASE AQUÍ ---
+    const SUPABASE_URL = 'TU_URL_DE_SUPABASE'; // Ej. https://xxxxxx.supabase.co
+    const SUPABASE_ANON_KEY = 'TU_CLAVE_ANON_DE_SUPABASE'; 
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- 2. LÓGICA PARA ACTUALIZAR LA CONTRASEÑA ---
+    async function updatePassword() {
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const msgDiv = document.getElementById('message');
+        
+        msgDiv.className = ''; // Limpiar clases
+        msgDiv.textContent = ''; // Limpiar mensaje previo
+
+        // Validaciones básicas
+        if (newPassword !== confirmPassword) {
+            msgDiv.textContent = "Las contraseñas no coinciden.";
+            return;
+        }
+        if (newPassword.length < 6) {
+            msgDiv.textContent = "La contraseña debe tener al menos 6 caracteres.";
+            return;
+        }
+
+        try {
+            // Supabase ya detectó automáticamente el token en la URL (el #access_token)
+            // Solo necesitamos pedirle que actualice la contraseña del usuario actual
+            const { data, error } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) {
+                msgDiv.textContent = "Error al actualizar: " + error.message;
+            } else {
+                msgDiv.className = 'success';
+                msgDiv.textContent = "¡Contraseña actualizada con éxito! Ya puedes cerrar esta ventana y regresar a la aplicación.";
+                
+                // Opcional: Limpiar los campos
+                document.getElementById('new_password').value = '';
+                document.getElementById('confirm_password').value = '';
+                
+                // Cerrar la sesión en esta página externa por seguridad
+                await supabase.auth.signOut();
+            }
+        } catch (err) {
+            msgDiv.textContent = "Ocurrió un error inesperado.";
+        }
+    }
+</script>
+
+</body>
+</html>
