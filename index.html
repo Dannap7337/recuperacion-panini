@@ -1,62 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Recuperar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Contraseña</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { background-color: #14A8FD; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        #message { margin-top: 15px; padding: 10px; border-radius: 5px; display: none; font-size: 14px; }
+    </style>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+<body>
 
-    <h2>🔑 Cambiar Contraseña</h2>
-    
-    <input type="password" id="p1" placeholder="Nueva contraseña" style="display:block; margin: 10px auto; padding: 10px;"><br>
-    <input type="password" id="p2" placeholder="Repetir contraseña" style="display:block; margin: 10px auto; padding: 10px;"><br>
-    
-    <button id="btn" style="padding: 10px 20px; background: #14A8FD; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Guardar Cambios
-    </button>
+<div class="container">
+    <h2>🔑 Nueva Contraseña</h2>
+    <p>Ingresa tu nueva clave para el álbum.</p>
+    <input type="password" id="new_password" placeholder="Escribe la contraseña">
+    <input type="password" id="confirm_password" placeholder="Repite la contraseña">
+    <button id="btn-update">Guardar Contraseña</button>
+    <div id="message"></div>
+</div>
 
-    <script>
-        // ESTO DEBE APARECER APENAS CARGUE LA PÁGINA
-        console.log("Script cargado");
-        alert("Si ves esto, la página nueva ya cargó");
-
-        const URL = 'https://pvcpnuoztvsxtukgmfyq.supabase.co';
-        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0';
+<script>
+    // Usamos un pequeño retraso para asegurar que la librería cargó en el navegador
+    window.onload = function() {
+        const url = 'https://pvcpnuoztvsxtukgmfyq.supabase.co';
+        const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2Y3BudW96dHZzeHR1a2dtZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMzExODksImV4cCI6MjA5MjgwNzE4OX0.f9NSldAkWyHDxLdBTOhJqL8FC-kHt4MaVIMd2EtPDd0';
         
-        // Inicializamos
-        const supabaseClient = window.supabase.createClient(URL, KEY);
+        // Forma correcta de acceder al cliente en la v2 desde el navegador
+        const _supabase = window.supabase.createClient(url, key);
 
-        document.getElementById('btn').onclick = async function() {
-            const pass1 = document.getElementById('p1').value;
-            const pass2 = document.getElementById('p2').value;
+        const btn = document.getElementById('btn-update');
+        const msgDiv = document.getElementById('message');
 
-            if (pass1 === "" || pass2 === "") {
-                alert("Escribe la contraseña en ambos cuadros");
-                return;
-            }
+        btn.onclick = async function() {
+            const p1 = document.getElementById('new_password').value;
+            const p2 = document.getElementById('confirm_password').value;
 
-            if (pass1 !== pass2) {
-                alert("Las contraseñas no son iguales");
-                return;
-            }
+            if (!p1 || !p2) { alert("Llena ambos campos"); return; }
+            if (p1 !== p2) { alert("Las contraseñas no coinciden"); return; }
+            if (p1.length < 6) { alert("Mínimo 6 caracteres"); return; }
 
-            this.disabled = true;
-            this.innerText = "Cambiando...";
+            btn.disabled = true;
+            btn.textContent = "Cambiando...";
 
             try {
-                const { error } = await supabaseClient.auth.updateUser({ password: pass1 });
+                const { error } = await _supabase.auth.updateUser({ password: p1 });
+
                 if (error) {
-                    alert("Error de Supabase: " + error.message);
+                    alert("Error: " + error.message);
+                    msgDiv.style.display = 'block';
+                    msgDiv.textContent = error.message;
+                    msgDiv.style.backgroundColor = '#ffebe9';
+                    btn.disabled = false;
+                    btn.textContent = "Guardar Contraseña";
                 } else {
-                    alert("✅ ¡ÉXITO! Contraseña cambiada. Ya puedes entrar a la app.");
+                    alert("✅ ¡Éxito! Contraseña actualizada.");
+                    msgDiv.style.display = 'block';
+                    msgDiv.textContent = "¡Listo! Ya puedes volver a la App.";
+                    msgDiv.style.backgroundColor = '#e6ffed';
+                    btn.style.display = 'none';
                 }
-            } catch (e) {
-                alert("Error crítico: " + e.message);
+            } catch (err) {
+                alert("Error técnico: " + err.message);
+                btn.disabled = false;
             }
-            this.disabled = false;
-            this.innerText = "Guardar Cambios";
         };
-    </script>
+    };
+</script>
+
 </body>
 </html>
